@@ -64,12 +64,19 @@ void Application::Update()
 			ImVec2 textSize = ImGui::CalcTextSize(Key.c_str());
 			ImVec2 textPosition = ImVec2(center.x - 425.f, (textSize.y) * i * 1.8 + center.y * 0.1);
 			ImGui::SetCursorPos(textPosition);
-			ImGui::Text(Key.c_str());
+			static char keyBuffer[26] = "";
+			for (size_t i = 0; i < sizeof(keyBuffer); i++)
+			{
+				keyBuffer[i] = Key[i];
+			}
+			textSize = ImGui::CalcTextSize(Key.c_str());
+			ImGui::SetNextItemWidth(textSize.x + 8);
+			ImGui::InputText(std::string("##keylabel" + std::to_string(i)).c_str(), keyBuffer, sizeof(keyBuffer), ImGuiInputTextFlags_ReadOnly);
 
 			ImGui::SameLine();
 			textPosition = ImVec2(center.x - 175.f, (textSize.y) * i * 1.8 + center.y * 0.1);
 			ImGui::SetCursorPos(textPosition);
-			static char foundPassBuffer[70] = "";
+			static char foundPassBuffer[65] = "";
 			for (size_t i = 0; i < sizeof(foundPassBuffer); i++)
 			{
 				foundPassBuffer[i] = dataItem->Value[i];
@@ -86,15 +93,15 @@ void Application::Update()
 		ImGui::Begin("SetPass");
 		ImGui::SetWindowFontScale(1.3f);
 
-		ImVec2 textSize = ImGui::CalcTextSize("Name:");
+		ImVec2 textSize = ImGui::CalcTextSize("Account:");
 		ImVec2 textSize2 = ImGui::CalcTextSize("Password:");
 		ImVec2 newPassPosition = ImVec2(center.x - (textSize.x/2 + textSize2.x /2 + center.x * 0.2), center.y - textSize.y * 4);
 		ImGui::SetCursorPos(newPassPosition);
-		ImGui::Text("Name:");
+		ImGui::Text("Account:");
 
 		ImGui::SameLine();
 		ImGui::SetNextItemWidth(center.x * 0.2);
-		static char nameBuffer[25] = "";
+		static char nameBuffer[26] = "";
 		for (size_t i = 0; i < sizeof(nameBuffer); i++)
 		{
 			nameBuffer[i] = nameSet[i];
@@ -108,7 +115,7 @@ void Application::Update()
 
 		ImGui::SameLine();
 		ImGui::SetNextItemWidth(center.x * 0.2);
-		static char passwordBuffer[64] = "";
+		static char passwordBuffer[65] = "";
 		for (size_t i = 0; i < sizeof(passwordBuffer); i++)
 		{
 			passwordBuffer[i] = passwordSet[i];
@@ -126,17 +133,19 @@ void Application::Update()
 
 			if (std::string(passwordBuffer) == "")
 			{
-				passwordList->SetString(std::string(nameBuffer), generateRandomPassword(64));
+				std::string generatedPassword = generateRandomPassword(64);
+				passwordList->SetString(std::string(nameBuffer), generatedPassword);
 				passwordList->SaveData("data.rndp", password);
+				passwordSet = std::string(generatedPassword);
 				//std::cout << "Generated password: " << nameBuffer << '\n';
+				addedPassText = "Generated password: " + std::string(generatedPassword);
 			}
 			else
 			{
 				passwordList->SetString(std::string(nameBuffer), std::string(passwordBuffer));
 				passwordList->SaveData("data.rndp", password);
+				addedPassText = "Set password complete: " + std::string(passwordBuffer);
 			}
-
-			addedPassText = "Created password: " + std::string(nameBuffer);
 		}
 
 		textSize = ImGui::CalcTextSize(addedPassText.c_str());
@@ -149,7 +158,7 @@ void Application::Update()
 		ImGui::Begin("GetPass");
 		ImGui::SetWindowFontScale(1.3f);
 
-		textSize = ImGui::CalcTextSize("Name:");
+		textSize = ImGui::CalcTextSize("Account:");
 		newPassPosition = ImVec2(center.x - (textSize.x / 2 + textSize2.x / 2 + center.x * 0.2 / 2), center.y - textSize.y * 4);
 		ImGui::SetCursorPos(newPassPosition);
 		ImGui::Text("Find password:");
@@ -181,7 +190,7 @@ void Application::Update()
 		ImGui::TextColored(ImVec4(0.0f, 1.f, 1.0f, 1.0f), "Password:");
 
 		ImGui::SameLine();
-		static char foundPassBuffer[70] = "";
+		static char foundPassBuffer[65] = "";
 		for (size_t i = 0; i < sizeof(foundPassBuffer); i++)
 		{
 			foundPassBuffer[i] = foundPassText[i];
@@ -195,7 +204,7 @@ void Application::Update()
 		ImGui::Begin("DeletePass");
 		ImGui::SetWindowFontScale(1.3f);
 
-		textSize = ImGui::CalcTextSize("Name:");
+		textSize = ImGui::CalcTextSize("Account:");
 		newPassPosition = ImVec2(center.x - (textSize.x / 2 + textSize2.x / 2 + center.x * 0.2 / 2), center.y - textSize.y * 4);
 		ImGui::SetCursorPos(newPassPosition);
 		ImGui::Text("Delete password:");
@@ -203,7 +212,7 @@ void Application::Update()
 		ImGui::SameLine();
 		ImGui::SetNextItemWidth(center.x * 0.2);
 
-		static char nameBuffer3[25] = "";
+		static char nameBuffer3[26] = "";
 		for (size_t i = 0; i < sizeof(nameBuffer3); i++)
 		{
 			nameBuffer3[i] = nameDelete[i];
@@ -248,17 +257,22 @@ void Application::Update()
 		ImVec2 center = ImVec2(windowSize.x * 0.5f, windowSize.y * 0.5f);
 
 		// Set the font scale to increase text size
-		ImGui::SetWindowFontScale(2.f);
+		ImGui::SetWindowFontScale(1.3f);
 		// Calculate the width of the text
-		const char* text = "Randpass";
-		ImVec2 textSize = ImGui::CalcTextSize(text);
+		//const char* text = "Randpass";
+		const char* text = "   ___               __                \n"
+			"  / _ \\___ ____  ___/ /__  ___ ____ ___\n"
+			" / , _/ _ `/ _ \\/ _  / _ \\/ _ `(_-<(_-<\n"
+			"/_/|_|\\_,_/_//_/\\_,_/ .__/\\_,_/___/___/\n"
+			"                   /_/                 \n";
+		ImVec2 textSize = ImGui::CalcTextSize(" / , _/ _ `/ _ \\/ _  / _ \\/ _ `(_-<(_-<");
 		// Calculate the position to center the text
-		ImVec2 textPosition = ImVec2(center.x - textSize.x * 0.5f, center.y - textSize.y * 3.5);
+		ImVec2 textPosition = ImVec2(center.x - textSize.x * 0.5f, center.y - textSize.y * 7);
 		// Set the cursor position to center the text
 		ImGui::SetCursorPos(textPosition);
 		// Add the centered text
 		ImGui::Text("%s", text);
-		ImGui::SetWindowFontScale(1.3f);
+		//ImGui::SetWindowFontScale(1.3f);
 
 		textSize = ImGui::CalcTextSize("Password:");
 		ImGui::SetCursorPos(ImVec2(center.x * 0.45, center.y - textSize.y * 1 + textSize.y / 2));
@@ -288,7 +302,7 @@ void Application::Update()
 		if (wrongPassCount > 0)
 		{
 			// Display the entered text
-			ImGui::SetCursorPos(ImVec2(center.x * 0.45, center.y + textSize.y * 0.5));
+			ImGui::SetCursorPos(ImVec2(center.x * 0.45, center.y + textSize.y * 1));
 			ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Wrong password(%d)", wrongPassCount);
 		}
 	}
