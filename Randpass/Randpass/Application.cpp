@@ -22,22 +22,25 @@ void Application::filterText(std::string& value)
 
 Application::Application()
 {
-	useMain = true;
-	password = "";
+	passwordList = new Database();
+
 	loggedIn = false;
+	justLoggedIn = false;
 	wrongPassCount = 0;
+
+	password = "";
+
+	addedPassType = "";
 	addedPassText = "";
 	foundPassText = "";
 	deletedPassText = "";
 
-	passwordList = new Database();
-
-	justLoggedIn = false;
-
-	nameSet = "";
+	accountSet = "";
 	passwordSet = "";
-	nameGet = "";
-	nameDelete = "";
+	accountGet = "";
+	accountDelete = "";
+
+	useMain = true;
 }
 
 void Application::Update()
@@ -104,11 +107,11 @@ void Application::Update()
 		static char nameBuffer[26] = "";
 		for (size_t i = 0; i < sizeof(nameBuffer); i++)
 		{
-			nameBuffer[i] = nameSet[i];
+			nameBuffer[i] = accountSet[i];
 		}
 		ImGui::InputText("##namelabel", nameBuffer, sizeof(nameBuffer));
-		nameSet = std::string(nameBuffer);
-		filterText(nameSet);
+		accountSet = std::string(nameBuffer);
+		filterText(accountSet);
 
 		ImGui::SameLine();
 		ImGui::Text("Password:");
@@ -136,22 +139,36 @@ void Application::Update()
 				std::string generatedPassword = generateRandomPassword(64);
 				passwordList->SetString(std::string(nameBuffer), generatedPassword);
 				passwordList->SaveData("data.rndp", password);
-				passwordSet = std::string(generatedPassword);
 				//std::cout << "Generated password: " << nameBuffer << '\n';
-				addedPassText = "Generated password: " + std::string(generatedPassword);
+				addedPassType = "Generated password:";
+				addedPassText = std::string(generatedPassword);
 			}
 			else
 			{
 				passwordList->SetString(std::string(nameBuffer), std::string(passwordBuffer));
 				passwordList->SaveData("data.rndp", password);
-				addedPassText = "Set password complete: " + std::string(passwordBuffer);
+				addedPassType = "Set password:";
+				addedPassText = std::string(passwordBuffer);
 			}
 		}
 
-		textSize = ImGui::CalcTextSize(addedPassText.c_str());
-		textPosition = ImVec2(center.x - textSize.x * 0.5f, center.y + textSize.y * 0.4);
-		ImGui::SetCursorPos(textPosition);
-		ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), addedPassText.c_str());
+		if (addedPassText != "")
+		{
+			textSize = ImGui::CalcTextSize(std::string(addedPassType + addedPassText).c_str());
+			textPosition = ImVec2(center.x - textSize.x * 0.5f, center.y + textSize.y * 0.4);
+			ImGui::SetCursorPos(textPosition);
+			ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), addedPassType.c_str());
+
+			ImGui::SameLine();
+			static char newPassBuffer[65] = "";
+			for (size_t i = 0; i < sizeof(newPassBuffer); i++)
+			{
+				newPassBuffer[i] = addedPassText[i];
+			}
+			textSize = ImGui::CalcTextSize(addedPassText.c_str());
+			ImGui::SetNextItemWidth(textSize.x + 8);
+			ImGui::InputText("##newPasslabel", newPassBuffer, sizeof(newPassBuffer), ImGuiInputTextFlags_ReadOnly);
+		}
 
 		ImGui::End();
 
@@ -169,11 +186,11 @@ void Application::Update()
 		static char nameBuffer2[25] = "";
 		for (size_t i = 0; i < sizeof(nameBuffer2); i++)
 		{
-			nameBuffer2[i] = nameGet[i];
+			nameBuffer2[i] = accountGet[i];
 		}
 		ImGui::InputText("##namelabel2", nameBuffer2, sizeof(nameBuffer2));
-		nameGet = std::string(nameBuffer2);
-		filterText(nameGet);
+		accountGet = std::string(nameBuffer2);
+		filterText(accountGet);
 
 		textSize = ImGui::CalcTextSize("Find");
 		textPosition = ImVec2(center.x - textSize.x * 0.5f, center.y - textSize.y * 1.7);
@@ -184,20 +201,23 @@ void Application::Update()
 			foundPassText = pass;
 		}
 
-		textSize = ImGui::CalcTextSize(std::string("Password:" + foundPassText).c_str());
-		textPosition = ImVec2(center.x - textSize.x * 0.5f, center.y + textSize.y * 0.4);
-		ImGui::SetCursorPos(textPosition);
-		ImGui::TextColored(ImVec4(0.0f, 1.f, 1.0f, 1.0f), "Password:");
-
-		ImGui::SameLine();
-		static char foundPassBuffer[65] = "";
-		for (size_t i = 0; i < sizeof(foundPassBuffer); i++)
+		if (foundPassText != "")
 		{
-			foundPassBuffer[i] = foundPassText[i];
+			textSize = ImGui::CalcTextSize(std::string("Password:" + foundPassText).c_str());
+			textPosition = ImVec2(center.x - textSize.x * 0.5f, center.y + textSize.y * 0.4);
+			ImGui::SetCursorPos(textPosition);
+			ImGui::TextColored(ImVec4(0.0f, 1.f, 1.0f, 1.0f), "Password:");
+
+			ImGui::SameLine();
+			static char foundPassBuffer[65] = "";
+			for (size_t i = 0; i < sizeof(foundPassBuffer); i++)
+			{
+				foundPassBuffer[i] = foundPassText[i];
+			}
+			textSize = ImGui::CalcTextSize(foundPassText.c_str());
+			ImGui::SetNextItemWidth(textSize.x + 8);
+			ImGui::InputText("##foundPasslabel", foundPassBuffer, sizeof(foundPassBuffer), ImGuiInputTextFlags_ReadOnly);
 		}
-		textSize = ImGui::CalcTextSize(foundPassText.c_str());
-		ImGui::SetNextItemWidth(textSize.x + 8);
-		ImGui::InputText("##foundPasslabel", foundPassBuffer, sizeof(foundPassBuffer), ImGuiInputTextFlags_ReadOnly);
 
 		ImGui::End();
 
@@ -215,11 +235,11 @@ void Application::Update()
 		static char nameBuffer3[26] = "";
 		for (size_t i = 0; i < sizeof(nameBuffer3); i++)
 		{
-			nameBuffer3[i] = nameDelete[i];
+			nameBuffer3[i] = accountDelete[i];
 		}
 		ImGui::InputText("##namelabel2", nameBuffer3, sizeof(nameBuffer3));
-		nameDelete = std::string(nameBuffer3);
-		filterText(nameDelete);
+		accountDelete = std::string(nameBuffer3);
+		filterText(accountDelete);
 
 		textSize = ImGui::CalcTextSize("Delete");
 		textPosition = ImVec2(center.x - textSize.x * 0.5f, center.y - textSize.y * 1.7);

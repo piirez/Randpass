@@ -7,21 +7,23 @@
 class Application
 {
 private:
-	std::string password;
+	Database* passwordList;
+
 	bool loggedIn;
+	bool justLoggedIn;
 	int wrongPassCount;
+
+	std::string password;
+
+	std::string addedPassType;
 	std::string addedPassText;
 	std::string foundPassText;
 	std::string deletedPassText;
 
-	Database* passwordList;
-
-	bool justLoggedIn;
-
-	std::string nameSet;
+	std::string accountSet;
 	std::string passwordSet;
-	std::string nameGet;
-	std::string nameDelete;
+	std::string accountGet;
+	std::string accountDelete;
 
 	std::string generateRandomPassword(int length);
 
